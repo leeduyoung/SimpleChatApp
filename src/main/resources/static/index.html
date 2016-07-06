@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>Login, Register form</title>
+        
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'>
+    <link rel="stylesheet" href="css/style.css">
+
+	<!-- jQuery -->
+    <script src="/js/jquery-1.11.3.min.js"></script>
+    <!-- <script src="/js/jquery.min.js"></script> -->
+
+    <!-- Firebase -->
+    <!-- ***********************************************************************************************************************
+        * TODO(DEVELOPER): Paste the initialization snippet from: Firebase Console > Overview > Add Firebase to your web app. *
+        *********************************************************************************************************************** -->
+    <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase-database.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyALJRQHbMRAnlCHGBZksUiixS_LozqE1ng",
+        authDomain: "dogether-baa16.firebaseapp.com",
+        databaseURL: "https://dogether-baa16.firebaseio.com",
+        storageBucket: "",
+      };
+      firebase.initializeApp(config);
+    </script>
+
+    <script type="text/javascript">
+    /**
+     * Handles the sign in button press.
+     */
+    function toggleSignIn() {
+      if (firebase.auth().currentUser) {
+        // [START signout]
+        firebase.auth().signOut();
+        // [END signout]
+      } else {
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+        if (email.length < 4) {
+          alert('Please enter an email address.');
+          return;
+        }
+        if (password.length < 4) {
+          alert('Please enter a password.');
+          return;
+        }
+        // Sign in with email and pass.
+        // [START authwithemail]
+        firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // [START_EXCLUDE]
+          if (errorCode === 'auth/wrong-password') {
+            alert('Wrong password.');
+          } else {
+            alert(errorMessage);
+          }
+          console.log(error);
+          document.getElementById('quickstart-sign-in').disabled = false;
+          // [END_EXCLUDE]
+        });
+        // [END authwithemail]
+      }
+      document.getElementById('quickstart-sign-in').disabled = true;
+    }
+
+    function handleSignUp() {
+      var email = document.getElementById('email2').value;
+      var password = document.getElementById('password2').value;
+      if (email.length < 4) {
+        alert('Please enter an email address.');
+        return;
+      }
+      if (password.length < 4) {
+        alert('Please enter a password.');
+        return;
+      }
+      // Sign in with email and pass.
+      // [START createwithemail]
+      firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        // [START_EXCLUDE]
+        if (errorCode == 'auth/weak-password') {
+          alert('The password is too weak.');
+        } else {
+          alert(errorMessage);
+        }
+        console.log(error);
+        // [END_EXCLUDE]
+      });
+      // [END createwithemail]
+    }
+
+    function googleSignIn() {
+      if (!firebase.auth().currentUser) {
+        // [START createprovider]
+        var provider = new firebase.auth.GoogleAuthProvider();
+        // [END createprovider]
+        // [START addscopes]
+        provider.addScope('https://www.googleapis.com/auth/plus.login');
+        // [END addscopes]
+        // [START signin]
+        firebase.auth().signInWithPopup(provider).then(function(result) {
+          // This gives you a Google Access Token. You can use it to access the Google API.
+          var token = result.credential.accessToken;
+          // The signed-in user info.
+          var user = result.user;
+          
+          // [START_EXCLUDE]
+          /* document.getElementById('quickstart-oauthtoken').textContent = token; */
+          // [END_EXCLUDE]
+          
+         if(user.displayName == null) {
+        	 window.location.href = 'chat.html?nickname=' + encodeURI(encodeURIComponent("사용자"));
+         }else {
+        	// 채팅페이지로 이동
+             window.location.href = 'chat.html?nickname=' + encodeURI(encodeURIComponent(user.displayName)); 
+         }
+          
+        }).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // The email of the user's account used.
+          var email = error.email;
+          // The firebase.auth.AuthCredential type that was used.
+          var credential = error.credential;
+          // [START_EXCLUDE]
+          if (errorCode === 'auth/account-exists-with-different-credential') {
+            alert('You have already signed up with a different auth provider for that email.');
+            // If you are using multiple auth providers on your app you should handle linking
+            // the user's accounts here.
+          } else {
+            console.log(error);
+            //console.error(error);
+          }
+          // [END_EXCLUDE]
+        });
+        // [END signin]
+      } else {
+        // [START signout]
+        firebase.auth().signOut();
+        // [END signout]
+      }
+      // [START_EXCLUDE]
+      document.getElementById('quickstart-sign-in').disabled = true;
+      // [END_EXCLUDE]
+    }    
+    
+    function signup()
+    {
+    	// 1. 이메일 유효성검사
+    	// 2. password, confirm_password 확인. 같다면 true, 틀리면 fasle
+    	// 3. null check
+    	var email = document.getElementById('email2').value;
+    	var password = document.getElementById('password2').value;
+    	var confirm_password = document.getElementById('confirm_password2').value;
+    	var nickname = document.getElementById('nickname').value;
+		
+    	var regex=/^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/;
+    	 
+    	if(regex.test(email) === false) {
+    	 alert("잘못된 이메일 형식입니다.");
+    	 return false;
+    	} else {
+	    	
+    		if(password != confirm_password) {
+    			alert("비밀번호를 확인해주세요.");
+    			return false;
+    		}
+    		else {
+            	var member = {
+                		"email": email,
+                		"nickname": nickname,
+                		"password": password
+                	};   
+        		
+    	    	$.ajax({
+    	    		url : '/account/signup',
+    	    		dataType : 'json',
+    	    		type : 'POST',
+    	    		data : JSON.stringify(member),
+    	    		contentType : 'application/json; charset=UTF-8',
+    	    		success : function(result) {
+    	    			
+    	    			console.log(result);
+    	    			
+    	    			if(result.success) {
+    	    				//회원가입 성공
+    	    				//채팅 페이지를 띄운다.
+    	    				//생성한 이메일로 채팅 페이지에 접속한다.
+    	    				window.location.href = 'chat.html?nickname=' + encodeURI(encodeURIComponent(result.member.nickname));
+    	    			}
+    	    			else {
+    	    				//회원가입 실패
+    	    				alert(result.reason);
+    	    			}
+    	    		}
+    	    	});	
+    		}
+    	}
+    }
+    
+    function login()
+    {
+    	var email = document.getElementById('email').value;
+    	var password = document.getElementById('password').value;
+		
+    	var regex=/^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/;
+    	 
+    	if(regex.test(email) === false) {
+    	 alert("잘못된 이메일 형식입니다.");
+    	 return false;
+    	} else {
+	    	
+           	var member = {
+               		"email": email,
+               		"password": password
+               	};   
+       		
+   	    	$.ajax({
+   	    		url : '/account/login',
+   	    		dataType : 'json',
+   	    		type : 'POST',
+   	    		data : JSON.stringify(member),
+   	    		contentType : 'application/json; charset=UTF-8',
+   	    		success : function(result) {
+   	    			
+   	    			console.log(result);
+   	    			
+   	    			if(result.success) {
+   	    				//로그인 성공
+   	    				//채팅 페이지를 띄운다.
+   	    				window.location.href = 'chat.html?nickname=' + encodeURI(encodeURIComponent(result.member.nickname));
+   	    			}
+   	    			else {
+   	    				// 로그인 실패
+   	    				alert(result.reason);
+   	    			}
+   	    		}
+   	    	});	
+    		
+    	}
+    }
+    
+    function initApp() {
+      // Listening for auth state changes.
+      // [START authstatelistener]
+/*       firebase.auth().onAuthStateChanged(function(user) {
+        // [START_EXCLUDE silent]
+        //document.getElementById('quickstart-verify-email').disabled = true;
+        // [END_EXCLUDE]
+        if (user) {
+          // 로그인
+          var displayName = user.displayName;
+          var email = user.email;
+          var emailVerified = user.emailVerified;
+          var photoURL = user.photoURL;
+          var isAnonymous = user.isAnonymous;
+          var uid = user.uid;
+          var refreshToken = user.refreshToken;
+          var providerData = user.providerData;
+          // [START_EXCLUDE silent]
+          document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
+          document.getElementById('quickstart-sign-in').textContent = 'Sign out';
+          document.getElementById('quickstart-account-details').textContent = JSON.stringify({
+            displayName: displayName,
+            email: email,
+            emailVerified: emailVerified,
+            photoURL: photoURL,
+            isAnonymous: isAnonymous,
+            uid: uid,
+            refreshToken: refreshToken,
+            providerData: providerData
+          }, null, '  ');
+          if (!emailVerified) {
+            //document.getElementById('quickstart-verify-email').disabled = false;
+          }
+          // [END_EXCLUDE]
+        } else {
+          // 로그아웃 
+          // [START_EXCLUDE silent]
+          document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
+          document.getElementById('quickstart-sign-in').textContent = 'Log in';
+          document.getElementById('quickstart-account-details').textContent = 'null';
+          // [END_EXCLUDE]
+        }
+        // [START_EXCLUDE silent]
+        document.getElementById('quickstart-sign-in').disabled = false;
+        // [END_EXCLUDE]
+      }); */
+      // [END authstatelistener]
+
+      //document.getElementById('quickstart-sign-in').addEventListener('click', toggleSignIn, false);
+      //document.getElementById('quickstart-sign-up').addEventListener('click', handleSignUp, false);
+      
+      document.getElementById('quickstart-sign-in').addEventListener('click', login, false);
+      document.getElementById('quickstart-sign-up').addEventListener('click', signup, false);
+      
+      //document.getElementById('quickstart-verify-email').addEventListener('click', sendEmailVerification, false);
+      //document.getElementById('quickstart-password-reset').addEventListener('click', sendPasswordReset, false);
+    }
+
+    window.onload = function() {
+      initApp();
+    };
+    </script>
+
+  </head>
+
+  <body>
+
+  <div class="login-box">
+    <div class="lb-header">
+      <a href="#" class="active" id="login-box-link">Login</a>
+      <a href="#" id="signup-box-link">Sign Up</a>
+    </div>
+
+	<!-- form > div 태그로 변경 -->
+    <div class="email-login">
+      <div class="u-form-group">
+        <input type="email" id="email" name="email" placeholder="Email"/>
+      </div>
+      <div class="u-form-group">
+        <input type="password" id="password" name="password" placeholder="Password"/>
+      </div>
+      <div class="u-form-group">
+        <button id="quickstart-sign-in">Log In</button>
+      </div>
+      <div class="u-form-group">
+        <a href="#" class="forgot-password">Forgot password?</a>
+      </div>
+    </div>
+    
+    <!-- form > div 태그로 변경 -->
+    <div class="email-signup">
+      <div class="u-form-group">
+        <input type="email" id="email2" name="email2" placeholder="Email"/>
+      </div>
+	  <div class="u-form-group">
+        <input type="text" id="nickname" name="nickname" placeholder="Nickname"/>
+      </div>      
+      <div class="u-form-group">
+        <input type="password" id="password2" name="password2" placeholder="Password"/>
+      </div>
+      <div class="u-form-group">
+        <input type="password" id="confirm_password2" name="confirm_password2" placeholder="Confirm Password"/>
+      </div>
+      <div class="u-form-group">
+        <button id="quickstart-sign-up">Sign Up</button>
+      </div>
+    </div>
+
+    <div class="social-login">
+      <a href="#">
+        <i class="fa fa-facebook fa-lg"></i>
+        Login in with facebook
+      </a>
+      <a href="#" onclick="googleSignIn()">
+        <i class="fa fa-google-plus fa-lg"></i>
+        log in with Google
+      </a>      
+    </div>
+
+  </div>
+
+  <!-- Container where we'll display the user details -->
+  <!-- <div class="quickstart-user-details-container">
+    Firebase sign-in status: <span id="quickstart-sign-in-status">Unknown</span>
+    <div>Firebase auth <code>currentUser</code> object value:</div>
+    <pre><code id="quickstart-account-details">null</code></pre>
+  </div> -->
+  
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src="js/index.js"></script>
+
+  </body>
+</html>
